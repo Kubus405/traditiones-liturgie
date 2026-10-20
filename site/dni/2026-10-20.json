@@ -1,0 +1,131 @@
+{
+  "date": "2026-10-20",
+  "rite": "Novus Ordo — polski kalendarz liturgiczny",
+  "source_url": "https://brewiarz.pl/x_26/2010p/czyt.php3",
+  "celebration": "Wspomnienie obowiązkowe św. Jana Kantego, prezbitera",
+  "liturgical_color": "Biały",
+  "antiphon_summary": "Antyfona przypomina, że miłosierdzie Boga jest większe od ludzkiego i zaprasza do przyjęcia Jego pouczeń. Dziś prosimy, by Boża dobroć owocowała naszą miłością do bliźnich.",
+  "introduction": "Gromadzimy się dziś na Eucharystii we wspomnienie świętego Jana Kantego, kapłana, którego życie było świadectwem miłosierdzia i troski o drugiego człowieka. Słowo Boże przypomni nam, że Chrystus jednoczy podzielonych i staje się naszym pokojem. Ewangelia wezwie nas do czujności, czyli do wiary przeżywanej w codziennym działaniu. Prośmy Pana, abyśmy z otwartymi sercami przyjęli Jego dar i potrafili nieść pojednanie tam, gdzie żyjemy. Powierzmy Mu nasze troski, a także tych, którym szczególnie potrzebna jest pomoc i bliskość.",
+  "saint_name": "Św. Jan Kanty",
+  "saint_description": "Kapłan i profesor Akademii Krakowskiej, znany z uczciwości, prostoty i wielkiej dobroci wobec potrzebujących. Jego życie przypomina, że wiedza, modlitwa i wiara powinny prowadzić do miłości. W polskim kalendarzu liturgicznym jego wspomnienie przypada 20 października.",
+  "readings_reference": "Ef 2, 12–22",
+  "readings_summary": "Święty Paweł ukazuje Chrystusa jako źródło pokoju. W Nim dotychczasowe podziały tracą ostateczną władzę, a wierzący tworzą jeden dom Boży.",
+  "psalm_reference": "Ps 85 (84), 9ab i 10. 11–12. 13–14",
+  "psalm_summary": "Psalm zachęca do słuchania Boga i do przyjęcia pokoju, który wyrasta z wierności i sprawiedliwości.",
+  "acclamation_reference": "Por. Łk 21, 36",
+  "acclamation_summary": "Wezwanie do czuwania i modlitwy w oczekiwaniu na spotkanie z Synem Człowieczym.",
+  "gospel_reference": "Łk 12, 35–38",
+  "gospel_summary": "Jezus porównuje uczniów do sług oczekujących powrotu pana. Ich gotowość jest obrazem wytrwałej, wiernej miłości.",
+  "intercessions": {
+    "introduction": "Z ufnością skierujmy nasze prośby do Boga, którego miłosierdzie obejmuje wszystkich ludzi.",
+    "petitions": [
+      "Módlmy się za Kościół, aby odważnie głosił Chrystusa, który jest naszym pokojem. Ciebie prosimy.",
+      "Módlmy się za pasterzy Kościoła i wszystkich nauczycieli, aby na wzór świętego Jana Kantego łączyli mądrość z dobrocią. Ciebie prosimy.",
+      "Módlmy się za narody rozdarte konfliktami, aby znalazły drogi sprawiedliwego pojednania. Ciebie prosimy.",
+      "Módlmy się za ubogich, chorych i samotnych, aby spotykali ludzi gotowych do niesienia pomocy. Ciebie prosimy.",
+      "Módlmy się za naszą wspólnotę, abyśmy byli czujni w wierze i hojni w codziennej miłości. Ciebie prosimy."
+    ],
+    "conclusion": "Boże, Ojcze miłosierdzia, przyjmij nasze modlitwy i ucz nas wprowadzać w życie Twoje słowo. Przez Chrystusa, Pana naszego. Amen."
+  },
+  "songs": {
+    "entrance": {
+      "title": "Gdzie miłość wzajemna",
+      "book": "Śpiewnik Siedleckiego, wyd. XLI",
+      "number": "692",
+      "catalog_url": "https://spiewniksiedleckiego.pl/wp-content/uploads/spis_tresci_2015-1.pdf"
+    },
+    "offertory": {
+      "title": "Przyjmij, Boże, tę ofiarę",
+      "book": "Śpiewnik Siedleckiego, wyd. XLI",
+      "number": "694",
+      "catalog_url": "https://spiewniksiedleckiego.pl/wp-content/uploads/spis_tresci_2015-1.pdf"
+    },
+    "communion": {
+      "title": "Przyjdźcie do mnie wszyscy",
+      "book": "Śpiewnik Siedleckiego, wyd. XLI",
+      "number": "271",
+      "catalog_url": "https://spiewniksiedleckiego.pl/wp-content/uploads/spis_tresci_2015-1.pdf"
+    },
+    "thanksgiving": {
+      "title": "Chrystus Pan karmi nas",
+      "book": "Śpiewnik Siedleckiego, wyd. XLI",
+      "number": "701",
+      "catalog_url": "https://spiewniksiedleckiego.pl/wp-content/uploads/spis_tresci_2015-1.pdf"
+    },
+    "recessional": {
+      "title": "Przykazanie nowe daję wam",
+      "book": "Śpiewnik Siedleckiego, wyd. XLI",
+      "number": "621",
+      "catalog_url": "https://spiewniksiedleckiego.pl/wp-content/uploads/spis_tresci_2015-1.pdf"
+    }
+  },
+  "note": "Przykład opracowany na podstawie źródła dla 20.10.2026; bez pełnych tekstów objętych prawami wydawcy.",
+  "prefaces": [
+    {
+      "number": 73,
+      "name": "Prefacja o świętych pasterzach — Obecność świętych pasterzy w Kościele",
+      "source_url": "https://biblia.kerygma.pl/eucharystia/prefacje/401-prefacje-o-aniolach-i-swietych-63-77"
+    },
+    {
+      "number": 70,
+      "name": "I prefacja o świętych — Chwała świętych",
+      "source_url": "https://biblia.kerygma.pl/eucharystia/prefacje/401-prefacje-o-aniolach-i-swietych-63-77"
+    },
+    {
+      "number": 71,
+      "name": "II prefacja o świętych — Rola świętych w Kościele",
+      "source_url": "https://biblia.kerygma.pl/eucharystia/prefacje/401-prefacje-o-aniolach-i-swietych-63-77"
+    },
+    {
+      "number": 36,
+      "name": "I prefacja zwykła — Odnowa świata przez Chrystusa",
+      "source_url": "https://biblia.kerygma.pl/eucharystia/prefacje/398-prefacje-okresu-zwyklego-28-41"
+    },
+    {
+      "number": 37,
+      "name": "II prefacja zwykła — Zbawienie przez Chrystusa",
+      "source_url": "https://biblia.kerygma.pl/eucharystia/prefacje/398-prefacje-okresu-zwyklego-28-41"
+    },
+    {
+      "number": 38,
+      "name": "III prefacja zwykła — Bóg Stwórca i Odkupiciel człowieka",
+      "source_url": "https://biblia.kerygma.pl/eucharystia/prefacje/398-prefacje-okresu-zwyklego-28-41"
+    },
+    {
+      "number": 39,
+      "name": "IV prefacja zwykła",
+      "source_url": "https://biblia.kerygma.pl/eucharystia/prefacje/398-prefacje-okresu-zwyklego-28-41"
+    },
+    {
+      "number": 40,
+      "name": "V prefacja zwykła",
+      "source_url": "https://biblia.kerygma.pl/eucharystia/prefacje/398-prefacje-okresu-zwyklego-28-41"
+    },
+    {
+      "number": 41,
+      "name": "VI prefacja zwykła",
+      "source_url": "https://biblia.kerygma.pl/eucharystia/prefacje/398-prefacje-okresu-zwyklego-28-41"
+    }
+  ],
+  "prefaces_note": "Możliwe przy wspomnieniu świętego w okresie zwykłym; wybór zależy od formularza. Prefacja własna, jeśli przewidziana, ma pierwszeństwo.",
+  "chant": {
+    "first_reading": {
+      "title": "Śpiewane pierwsze czytanie",
+      "reference": "Ef 2, 12–22",
+      "image": "neumy/2026-10-20/czytanie.png",
+      "gabc": "neumy/2026-10-20/czytanie.gabc",
+      "is_full_text": false,
+      "status": "Szkic automatyczny; niezweryfikowana akcentuacja i ton."
+    },
+    "gospel": {
+      "title": "Śpiewana Ewangelia",
+      "reference": "Łk 12, 35–38",
+      "image": "neumy/2026-10-20/ewangelia.png",
+      "gabc": "neumy/2026-10-20/ewangelia.gabc",
+      "is_full_text": false,
+      "status": "Szkic automatyczny; niezweryfikowana akcentuacja i ton."
+    }
+  },
+  "second_reading_reference": "",
+  "second_reading_summary": ""
+}
