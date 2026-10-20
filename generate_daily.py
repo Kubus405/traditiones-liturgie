@@ -148,9 +148,13 @@ def parse_source_html(day, html):
         r'^(?:Poniedziałek|Wtorek|Środa|Czwartek|Piątek|Sobota|Niedziela),?\s*'
         r'\d{1,2}\s+[A-Za-zĄĆĘŁŃÓŚŹŻąćęłńóśźż]+\s+\d{4}\s*',
         '', raw_celebration, flags=re.I).strip()
-    if not raw_celebration or len(raw_celebration) > 180:
-        raise ValueError('Niepewna nazwa obchodu liturgicznego')
-    sections = {}
+if not raw_celebration or len(raw_celebration) > 180:
+    raise ValueError(
+        f'Niepewna nazwa obchodu liturgicznego; '
+        f'kolor={color_line!r}; '
+        f'odczyt={raw_celebration!r}; '
+        f'okolica={lines[max(0, idx-5):idx+6]!r}'
+    )    sections = {}
     for k, v in SLOT_TITLES.items():
         if k == 'second_reading' and not _indices(lines, v):
             continue
