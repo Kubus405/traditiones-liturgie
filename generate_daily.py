@@ -178,6 +178,145 @@ def fetch_source(day):
     return url, parse_source_html(day, response.text)
 
 
+
+# Autorskie wprowadzenia zweryfikowane dla konkretnego zestawu czytań.
+# Nie stosować ich po zmianie formularza lub siglów lekcjonarza.
+EDITORIAL_DAYS = {
+    '2026-10-20': {
+        'readings': 'Ef 2, 12-22', 'gospel': 'Łk 12, 35-38',
+        'saint_name': 'Święty Jan Kanty',
+        'saint_description': (
+            'Święty Jan Kanty był kapłanem i profesorem Akademii Krakowskiej. '
+            'Łączył pracę naukową z modlitwą i szczególną troską o ubogich. '
+            'Jest patronem nauczycieli, uczniów i studentów.'
+        ),
+        'introduction': (
+            'Drodzy Bracia i Siostry!\n\n'
+            'W dzisiejszej liturgii wspominamy świętego Jana Kantego, kapłana i nauczyciela, '
+            'który łączył umiłowanie prawdy z miłosierdziem wobec potrzebujących. '
+            'Święty Paweł przypomina nam, że przez Chrystusa nie jesteśmy już obcymi, '
+            'lecz domownikami Boga. W Ewangelii Pan Jezus wzywa nas do czuwania '
+            'i gotowości na Jego przyjście.\n\n'
+            'Prośmy, aby ta Eucharystia umocniła naszą wiarę, nauczyła dostrzegać '
+            'Chrystusa w drugim człowieku i pomogła nam wiernie odpowiadać '
+            'na Boże wezwanie każdego dnia.'
+        ),
+        'intercessions': {
+            'introduction': (
+                'Bracia i Siostry, za przykładem świętego Jana Kantego, '
+                'który służył Bogu i ludziom, z ufnością przedstawmy nasze prośby:'
+            ),
+            'petitions': [
+                'Módlmy się za Kościół, aby głosząc Chrystusa, prowadził ludzi ku jedności i pokojowi. Ciebie prosimy.',
+                'Módlmy się za nauczycieli, wychowawców i studentów, aby poszukiwanie prawdy łączyli z szacunkiem i troską o bliźnich. Ciebie prosimy.',
+                'Módlmy się za ubogich, chorych i osamotnionych, aby nie zabrakło im pomocy i ludzkiej życzliwości. Ciebie prosimy.',
+                'Módlmy się za nas samych, abyśmy byli gotowi na spotkanie z Panem i wiernie pełnili Jego wolę. Ciebie prosimy.',
+                'Módlmy się za naszych zmarłych, aby Bóg przyjął ich do radości życia wiecznego. Ciebie prosimy.',
+            ],
+            'conclusion': (
+                'Boże, źródło pokoju i miłosierdzia, wysłuchaj naszych modlitw '
+                'i naucz nas służyć Tobie w naszych bliźnich. Przez Chrystusa, Pana naszego. Amen.'
+            ),
+        },
+    },
+    '2026-10-21': {
+        'readings': 'Ef 3, 2-12', 'gospel': 'Łk 12, 39-48',
+        'introduction': (
+            'Drodzy Bracia i Siostry!\n\n'
+            'Przychodzimy dziś do ołtarza, aby zaczerpnąć siły z Bożego słowa '
+            'i z Eucharystii. Święty Paweł przypomina, że obietnica zbawienia '
+            'została otwarta dla wszystkich narodów, a w Chrystusie możemy '
+            'z ufnością zbliżać się do Ojca. W Ewangelii Jezus wzywa uczniów '
+            'do czujności i odpowiedzialności za to, co zostało im powierzone.\n\n'
+            'Prośmy Pana o serca gotowe do służby, abyśmy nie odkładali dobra na później '
+            'i potrafili wiernie wypełniać nasze codzienne obowiązki.'
+        ),
+        'intercessions': {
+            'introduction': (
+                'Zebrani przy stole słowa Bożego i Eucharystii, prośmy Ojca, '
+                'aby uczynił nas wiernymi świadkami swojej miłości:'
+            ),
+            'petitions': [
+                'Módlmy się za Kościół, aby wszystkim narodom głosił Ewangelię zbawienia. Ciebie prosimy.',
+                'Módlmy się za rządzących, aby powierzoną im władzę wykorzystywali dla dobra wspólnego. Ciebie prosimy.',
+                'Módlmy się za ludzi samotnych i zniechęconych, aby znaleźli wspólnotę i nadzieję. Ciebie prosimy.',
+                'Módlmy się za nasze rodziny, aby nie brakowało w nich cierpliwości, odpowiedzialności i przebaczenia. Ciebie prosimy.',
+                'Módlmy się za zmarłych, aby zostali dopuszczeni do udziału w uczcie niebieskiej. Ciebie prosimy.',
+            ],
+            'conclusion': (
+                'Boże, nasz Ojcze, przyjmij prośby swojego ludu i umacniaj nas '
+                'w wiernym pełnieniu Twojej woli. Przez Chrystusa, Pana naszego. Amen.'
+            ),
+        },
+    },
+}
+
+# Dni nieobjęte redakcją otrzymują godne, ale OGÓLNE wprowadzenie.
+# Nie wolno udawać, że automatyczny szablon komentuje dane czytania.
+PASTORAL_OPENINGS = (
+    'Drodzy Bracia i Siostry!\n\nStajemy dziś przed Bogiem, aby wsłuchać się w Jego słowo i przyjąć dar Eucharystii.',
+    'Bracia i Siostry!\n\nPrzychodzimy na tę Mszę Świętą z naszymi radościami, troskami i nadzieją, że Pan jest pośród nas.',
+    'Drodzy Bracia i Siostry!\n\nWspólna modlitwa gromadzi nas przy ołtarzu Chrystusa, który nieustannie obdarza swój Kościół łaską.',
+    'Bracia i Siostry!\n\nRozpoczynając Eucharystię, powierzmy Panu wszystko, co przeżywamy, i otwórzmy serca na Jego obecność.',
+)
+PASTORAL_MOTIFS = {
+    'miłosierdzie': 'Antyfona na wejście przypomina o miłosierdziu Boga. Niech Jego dobroć pobudza nas do przebaczenia i pomocy potrzebującym.',
+    'miłość': 'Dzisiejsza antyfona kieruje nasze myśli ku miłości, która ma wyrażać się w naszych czynach i słowach.',
+    'pokój': 'Antyfona na wejście przywołuje dar pokoju. Prośmy, by Pan uzdrawiał podziały i uczył nas pojednania.',
+    'dziękczynienie': 'Dziękujmy dziś Bogu za otrzymane dobro i prośmy o wdzięczne serce także pośród codziennych trudności.',
+    'wspólnota': 'Przypomnijmy sobie, że wiara prowadzi nas do wspólnoty: jesteśmy odpowiedzialni jedni za drugich.',
+    'zaufanie': 'Powierzmy Panu to, co budzi nasz niepokój, i uczmy się z ufnością przyjmować Jego prowadzenie.',
+    'opieka': 'Bóg nie pozostawia nas samych. Niech świadomość Jego opieki umacnia naszą wiarę i nadzieję.',
+    'nawrócenie': 'Niech ta liturgia będzie dla nas okazją do szczerego rachunku sumienia i odnowienia serca.',
+    'zmartwychwstanie': 'W Chrystusie zmartwychwstałym odnajdujemy nadzieję silniejszą niż lęk i cierpienie.',
+    'eucharystia': 'W Eucharystii Chrystus daje nam siebie. Przyjmijmy ten dar z wdzięcznością i wiarą.',
+    'świątynia': 'Bóg pragnie zamieszkać wśród swojego ludu. Otwórzmy Mu serca i uczmy się żyć w Jego obecności.',
+    'radość': 'Prawdziwa radość ma swoje źródło w Bogu. Niech udział w liturgii odnowi w nas tę nadzieję.',
+    'wiara': 'Prośmy dziś o wiarę, która nie ogranicza się do słów, lecz przemienia nasze codzienne wybory.',
+}
+PASTORAL_ENDINGS = (
+    'Niech słowo, które usłyszymy, znajdzie miejsce w naszym życiu, a Komunia Święta umocni nas do wiernej służby Bogu i ludziom.',
+    'Prośmy, aby udział w tej Eucharystii pomógł nam rozpoznać dobro, do którego Pan nas wzywa, i odważnie je podejmować.',
+    'Otwórzmy serca na łaskę Boga, abyśmy wychodząc z kościoła, potrafili nieść innym Jego pokój i miłość.',
+    'Niech spotkanie z Chrystusem umocni nas w codziennych obowiązkach i nauczy dostrzegać potrzeby bliźnich.',
+)
+
+
+def _pastoral_texts(day, src):
+    refs = src['ref']
+    entry = EDITORIAL_DAYS.get(day.isoformat())
+    if (entry is not None and
+            refs.get('readings') == entry['readings'] and
+            refs.get('gospel') == entry['gospel']):
+        return (entry['introduction'], entry['intercessions'],
+                'Indywidualnie opracowane wprowadzenie na podstawie czytań dnia.',
+                entry.get('saint_name'), entry.get('saint_description'))
+
+    # Zróżnicowanie formuł bez twierdzenia, że komentujemy konkretną Ewangelię.
+    n = day.toordinal()
+    introduction = ' '.join((
+        PASTORAL_OPENINGS[n % len(PASTORAL_OPENINGS)],
+        PASTORAL_MOTIFS.get(src['theme'], PASTORAL_MOTIFS['wiara']),
+        PASTORAL_ENDINGS[(n // 4) % len(PASTORAL_ENDINGS)],
+    ))
+    petitions = [
+        'Módlmy się za Kościół i jego pasterzy, aby wiernie prowadzili ludzi do Chrystusa. Ciebie prosimy.',
+        'Módlmy się za odpowiedzialnych za życie społeczne, aby kierowali się sprawiedliwością i troską o najsłabszych. Ciebie prosimy.',
+        'Módlmy się za chorych, ubogich i samotnych, aby otrzymali potrzebną pomoc i wsparcie. Ciebie prosimy.',
+        'Módlmy się za nas zgromadzonych przy ołtarzu, abyśmy przyjmowali słowo Boże i żyli nim każdego dnia. Ciebie prosimy.',
+        'Módlmy się za zmarłych, aby Pan obdarzył ich pokojem wiecznym. Ciebie prosimy.',
+    ]
+    intercessions = {
+        'introduction': 'Bracia i Siostry, ufając dobroci naszego Ojca, przedstawmy Mu prośby Kościoła i całego świata:',
+        'petitions': petitions,
+        'conclusion': ('Boże, nasz Ojcze, wysłuchaj modlitw swojego ludu '
+                       'i umacniaj nas w miłości. Przez Chrystusa, Pana naszego. Amen.'),
+    }
+    return (introduction, intercessions,
+            'Wprowadzenie ogólne oparte na motywie antyfony; nie jest komentarzem do konkretnych czytań.',
+            None, None)
+
+
 def compose(day, url, src):
     theme = src['theme']
     motif = DESCRIPTIONS[theme]
@@ -185,33 +324,16 @@ def compose(day, url, src):
     celebration = src['celebration']
     saint = src['saint_name']
     is_saint = saint.startswith('Św.')
-    intro = (
-        f'Gromadzimy się na Eucharystii w dniu, w którym Kościół obchodzi: {celebration}. '
-        f'Antyfona na wejście kieruje naszą uwagę na {motif}. '
-        'Pragniemy otworzyć serca na Boże słowo i z wiarą uczestniczyć w świętych misteriach. '
-        f'Usłyszymy czytanie oznaczone siglami {refs["readings"]}, a następnie Ewangelię {refs["gospel"]}. '
-        'Prośmy Boga, aby usłyszane słowo przyniosło owoce w naszej modlitwie, '
-        'w rodzinach i w codziennych spotkaniach z ludźmi.'
-    )
-    saint_description = (
-        f'W kalendarzu liturgicznym na ten dzień wskazano obchód: {celebration}. '
-        'Życiorys i patronat świętego należy sprawdzić w wiarygodnym źródle hagiograficznym; '
-        'ten automatyczny opis nie dodaje niezweryfikowanych szczegółów.'
+    intro, intercessions, editorial_note, saint_override, saint_desc_override = _pastoral_texts(day, src)
+    if saint_override:
+        saint = saint_override
+    saint_description = saint_desc_override or (
+        'Patrona lub świętego wspominanego w liturgii dnia można sprawdzić '
+        'w kalendarzu liturgicznym pod podanym odnośnikiem.'
         if is_saint else
-        f'Dzisiejszy formularz określono jako: {celebration}. '
-        'Nie przypisujemy temu dniowi patrona, którego nie wymieniono w odczytanym formularzu.'
+        'W formularzu dnia nie wskazano odrębnego wspomnienia patrona. '
+        'Sprawdź kalendarz lokalny, ponieważ obchody diecezjalne mogą się różnić.'
     )
-    intercessions = {
-        'introduction': f'Z wiarą zanieśmy nasze prośby do Boga, którego słowo prowadzi nas ku temu, co dobre. Pamiętając o {motif}, módlmy się wspólnie:',
-        'petitions': [
-            'Módlmy się za Kościół i jego pasterzy, aby wiernie głosili Ewangelię i prowadzili ludzi do Chrystusa. Ciebie prosimy.',
-            'Módlmy się za rządzących narodami, aby troszczyli się o sprawiedliwość, pokój i godność każdego człowieka. Ciebie prosimy.',
-            'Módlmy się za ubogich, chorych i osamotnionych, aby spotkali życzliwą pomoc i nie tracili nadziei. Ciebie prosimy.',
-            'Módlmy się za rodziny i młodych, aby w codzienności kierowali się miłością i szacunkiem. Ciebie prosimy.',
-            'Módlmy się za nas zgromadzonych na Eucharystii, abyśmy umieli wprowadzać usłyszane słowo w czyn. Ciebie prosimy.',
-        ],
-        'conclusion': 'Boże, nasz Ojcze, przyjmij modlitwy swojego ludu i ucz nas wypełniać Twoją wolę. Przez Chrystusa, Pana naszego. Amen.',
-    }
     themes = [THEMES_FOR_SONGS.get(theme, theme), 'eucharystia', 'dziękczynienie']
     prefaces, preface_note = choose_prefaces(day, celebration)
     chants = make_chants(day, refs)
@@ -223,6 +345,7 @@ def compose(day, url, src):
         'liturgical_color': 'Sprawdź w źródle',
         'antiphon_summary': f'Antyfona na wejście zwraca uwagę na {motif}. Pełny tekst: pod podanym źródłem.',
         'introduction': intro, 'saint_name': saint, 'saint_description': saint_description,
+        'introduction_note': editorial_note,
         'readings_reference': refs['readings'],
         'readings_summary': 'Pierwsze czytanie wskazane w formularzu dnia. Przeczytaj jego pełny tekst w źródle przed liturgią.',
         'second_reading_reference': refs.get('second_reading', ''),
@@ -238,7 +361,7 @@ def compose(day, url, src):
         'prefaces': prefaces,
         'prefaces_note': preface_note,
         'chant': chants,
-        'note': 'Automatyczna propozycja z szablonu, nie oficjalny komentarz do czytań. Weryfikuj przed liturgią.',
+        'note': editorial_note + ' Modlitwa wiernych jest propozycją autorską; przed użyciem wymaga zatwierdzenia przez celebransa.',
     }
 
 
