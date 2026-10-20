@@ -40,7 +40,7 @@ MOTIFS = [
     ('nawrócenie', ['nawróc', 'pokuta', 'pokutę']),
     ('zmartwychwstanie', ['zmartwychwst', 'powstał z martwych']),
     ('eucharystia', ['eucharyst', 'chleb żyw', 'ciało moje']),
-        ('świątynia', ['świąty', 'przybytek', 'przybytki']),
+    ('świątynia', ['świąty', 'przybytek', 'przybytki']),
     ('radość', ['radośc', 'radość', 'raduj']),
     ('wiara', ['wiar', 'wierzy', 'wiernych']),
 ]
@@ -111,50 +111,45 @@ def parse_source_html(day, html):
     lines = [re.sub(r'\s+', ' ', line).strip()
              for line in soup.get_text('\n', strip=True).splitlines()]
     lines = [s for s in lines if s]
-    # "Kolor szat" describes the vestment colour, NOT the celebration.
-    # Never use a colour or an unrelated line as the liturgical day name.
-    color_positions = [i for i, x in enumerate(lines)
-                       if x.lower().startswith('kolor szat:')]
-    if not color_positions:
-        raise ValueError('Nie znaleziono opisu koloru szat liturgicznych')
-    idx = color_positions[-1]
-    color_line = lines[idx].split(':', 1)[1].strip()
-    colour_only = re.fullmatch(
-        r'(?:biały|biała|zielony|zielona|czerwony|czerwona|fioletowy|fioletowa|'
-        r'różowy|różowa|czarny|czarna)(?:\s*(?:/|lub|albo|,|i)\s*'
-        r'(?:biały|biała|zielony|zielona|czerwony|czerwona|fioletowy|fioletowa|'
-        r'różowy|różowa|czarny|czarna))*\.?',
-        color_line, flags=re.I)
-    if colour_only:
-        # The source may place the celebration on a neighbouring line.
-        # Accept it only if it clearly looks like a liturgical celebration.
-        neighbours = lines[max(0, idx - 3):idx] + lines[idx + 1:idx + 4]
-        patterns = (r'\b(?:wspomnienie|święto|uroczystość|niedziela|dzień powszedni|'
-                    r'feria|oktawa|sobota|poniedziałek|wtorek|środa|czwartek|piątek)\b')
-        candidates = [x for x in neighbours if re.search(patterns, x, re.I)
-                      and not x.lower().startswith('kolor szat:')
-                      and 8 <= len(x) <= 180]
-        if len(candidates) != 1:
-            raise ValueError('Nie udało się jednoznacznie odczytać nazwy obchodu; '
-                             f'kolor szat: {color_line!r}, kandydaci: {candidates!r}')
-        raw_celebration = candidates[0]
-    else:
-        # Some page versions combine colour and celebration on one line.
-        raw_celebration = re.sub(
-            r'^(?:biały|biała|zielony|zielona|czerwony|czerwona|'
-            r'fioletowy|fioletowa|różowy|różowa|czarny|czarna)\b[\s,;:–-]*',
-            '', color_line, flags=re.I).strip()
-    raw_celebration = re.sub(
-        r'^(?:Poniedziałek|Wtorek|Środa|Czwartek|Piątek|Sobota|Niedziela),?\s*'
-        r'\d{1,2}\s+[A-Za-zĄĆĘŁŃÓŚŹŻąćęłńóśźż]+\s+\d{4}\s*',
-        '', raw_celebration, flags=re.I).strip()
-if not raw_celebration or len(raw_celebration) > 180:
-    raise ValueError(
-        f'Niepewna nazwa obchodu liturgicznego; '
-        f'kolor={color_line!r}; '
-        f'odczyt={raw_celebration!r}; '
-        f'okolica={lines[max(0, idx-5):idx+6]!r}'
-    )    sections = {}
+    # The page's "Kolor szat" label is NOT the name of the celebration.
+    # On the live site the date and celebration can be in the SAME element
+    # or split among several HTML tags. Look only in the day-header region,
+    # demand the EXACT local date, then read what follows that date.
+    positions = [i for i, line in enumerate(lines)
+                 if line.lower().startswith('kolor szat:')]
+    if len(positions) != 1:
+        raise ValueError(f'Nie znaleziono jednoznacznego nagłówka dnia: {len(positions)}')
+    pos = positions[0]
+    header = []
+    for line in lines[pos:pos + 12]:
+        if line.lower().startswith(('teksty liturgii mszy',
+                                    'inne dostępne formularze',
+                                    'antyfona na wejście')):
+            break
+        header.append(line)
+    header_text = ' '.join(header)
+    polish_months = ('', 'stycznia', 'lutego', 'marca', 'kwietnia', 'maja',
+                     'czerwca', 'lipca', 'sierpnia', 'września',
+                     'października', 'listopada', 'grudnia')
+    date_match = re.search(
+        rf'\b{day.day}\s+{polish_months[day.month]}\s+{day.year}\b',
+        header_text, flags=re.I)
+    if not date_match:
+        raise ValueError(f'Brak zgodnej daty w nagłówku: {header_text[:230]!r}')
+    raw_celebration = header_text[date_match.end():]
+    # Icon captions and local optional formularies are not part of the day name.
+    raw_celebration = re.split(
+        r'\b(?:Kolor szat liturgicznych|W archidiecezji|W diecezji|'
+        r'Teksty liturgii Mszy|Inne dostępne formularze)\b',
+        raw_celebration, maxsplit=1, flags=re.I)[0].strip(' \u00a0;,:-')
+    # Do not mistake a vestment colour or an image caption for a feast.
+    if (not raw_celebration or len(raw_celebration) > 180 or
+            re.fullmatch(r'(?:biały|zielony|czerwony|fioletowy|różowy|czarny)',
+                         raw_celebration, flags=re.I)):
+        raise ValueError('Niepewna nazwa obchodu liturgicznego; '
+                         f'nagłówek: {header_text[:230]!r}; '
+                         f'wynik: {raw_celebration!r}')
+    sections = {}
     for k, v in SLOT_TITLES.items():
         if k == 'second_reading' and not _indices(lines, v):
             continue
