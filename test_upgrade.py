@@ -53,6 +53,23 @@ for i in range(15):
                    {(a,b,c) for a,b,c,_ in SONGS} for s in value['polish'])
         assert value['latin']['title'] in [s[0] for s in LATIN_SONGS[slot]]
         assert value['latin']['number'] == ''  # never fabricate a number
+    latin_titles = [value['latin']['title'].casefold().strip()
+                    for value in selections.values()]
+    assert len(latin_titles) == len(set(latin_titles)), latin_titles
+
+# Regression: no repeats even on Marian, Christmas or Eucharistic days.
+for themes in ([], ['maryja'], ['eucharystia', 'miłość'],
+               ['narodzenie pańskie'], ['adwent'],
+               ['zmartwychwstanie', 'wielkanoc'], ['dziękczynienie']):
+    for i in range(50):
+        selections = choose_songs(themes, DAY + dt.timedelta(days=i))
+        names = [v['latin']['title'].casefold().strip() for v in selections.values()]
+        assert len(names) == 5 and len(set(names)) == 5, (themes, names)
+
+# The default non-seasonal day must not fall back to Christmas/Advent/Easter chants.
+ordinary = choose_songs(['wiara', 'eucharystia', 'miłość'], DAY)
+assert ordinary['recessional']['latin']['title'] not in (
+    'Regina caeli', 'Alma Redemptoris Mater', 'Ave Regina caelorum')
 
 src = {
   'theme': 'wiara',
@@ -78,4 +95,4 @@ with tempfile.TemporaryDirectory() as temp:
         assert data['offices'][1]['data']['reading_url'].endswith('2210w1/czyt.php3')
         assert data['offices'][1]['data'] == data['offices'][2]['data']
         assert 'reading_text' not in str(data)
-print('OK: 8 opcji, 5 x (3 PL + 1 LA), kolory, źródła i JSON v2')
+print('OK: 8 opcji, 5 x (3 PL + 1 LA), bez powtarzania LA, kolory, źródła i JSON v2')

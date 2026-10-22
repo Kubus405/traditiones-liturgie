@@ -98,6 +98,7 @@ def choose_songs(themes, date):
     """
     cleaned = [str(t).lower().strip() for t in themes][:8]
     result = {}
+    used_latin_titles = set()  # One Latin hymn may only appear once per Mass.
     seasonal = {'adwent', 'narodzenie pańskie', 'boże narodzenie',
                 'wielki post', 'wielkanoc', 'zmartwychwstanie',
                 'zesłanie ducha', 'duch święty'}
@@ -125,9 +126,30 @@ def choose_songs(themes, date):
         loffset = date.toordinal() % len(latin_options)
         latin_rotated = latin_options[loffset:] + latin_options[:loffset]
         def latin_score(song):
-            return sum((15 if i == 0 else 5) for i, theme in enumerate(cleaned)
-                       if theme and theme in song[1])
-        latin = max(latin_rotated, key=latin_score)
+            title, tags = song
+            value = sum((15 if i == 0 else 5) for i, theme in enumerate(cleaned)
+                        if theme and theme in tags)
+            # Seasonal Marian antiphons and Advent/Christmas/Easter chants
+            # are not generic fillers for an unrelated October Mass.
+            restricted = {
+                'Adeste fideles': {'narodzenie pańskie', 'boże narodzenie'},
+                'Regina caeli': {'wielkanoc', 'zmartwychwstanie'},
+                'Gaudete in Domino semper': {'adwent'},
+                'Alma Redemptoris Mater': {'adwent', 'narodzenie pańskie', 'boże narodzenie'},
+                'Ave Regina caelorum': {'wielki post'},
+            }
+            required = restricted.get(title)
+            if required and not (set(cleaned) & required):
+                value -= 100
+            return value
+
+        # Don't recommend the same chant for multiple moments of the Mass.
+        unused_latin = [song for song in latin_rotated
+                        if song[0].casefold().strip() not in used_latin_titles]
+        if not unused_latin:
+            raise ValueError(f'Brak niepowtarzających się śpiewów łacińskich dla: {slot}')
+        latin = max(unused_latin, key=latin_score)
+        used_latin_titles.add(latin[0].casefold().strip())
         result[slot] = {
             'polish': polish,
             'latin': {
