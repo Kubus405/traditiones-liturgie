@@ -31,6 +31,8 @@ jobs:
         run: pip install -r requirements.txt
       - name: Testy
         run: python test_local.py
+      - name: Test wyboru oficjum i propozycji pieśni
+        run: python test_upgrade.py
       - name: Wygeneruj dziś i trzy kolejne dni (bez API)
         run: python generate_daily.py --days 4 --replace
       - name: Przygotuj GitHub Pages
