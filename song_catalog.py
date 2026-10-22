@@ -49,34 +49,94 @@ SONGS = [
 ]
 
 
-def choose_songs(themes, date):
-    """Choose one real, numbered song per slot; favor antiphon/season themes.
+# Traditional Latin titles; no lyrics or unverified hymnbook numbers.
+# The Latin song is NOT advertised as belonging to the three Polish books.
+LATIN_SONGS = {
+    'entrance': [
+        ('Adeste fideles', ['narodzenie pańskie', 'boże narodzenie']),
+        ('Veni Creator Spiritus', ['duch święty', 'zesłanie ducha']),
+        ('Regina caeli', ['wielkanoc', 'zmartwychwstanie']),
+        ('Gaudete in Domino semper', ['radość', 'adwent']),
+        ('Ubi caritas', ['miłość', 'wspólnota', 'jedność']),
+        ('Salve Regina', ['maryja', 'najświętszej maryi']),
+        ('Laudate Dominum omnes gentes', ['uwielbienie', 'wiara']),
+    ],
+    'offertory': [
+        ('Veni Creator Spiritus', ['duch święty', 'zesłanie ducha']),
+        ('Ubi caritas', ['miłość', 'wspólnota', 'jedność']),
+        ('Ave Maria', ['maryja', 'najświętszej maryi']),
+        ('Adoro te devote', ['eucharystia', 'wiara']),
+        ('Laudate Dominum omnes gentes', ['uwielbienie']),
+    ],
+    'communion': [
+        ('Adoro te devote', ['eucharystia', 'wiara']),
+        ('Ave verum corpus', ['eucharystia', 'ciało']),
+        ('Panis angelicus', ['eucharystia', 'chleb']),
+        ('Ubi caritas', ['miłość', 'wspólnota']),
+    ],
+    'thanksgiving': [
+        ('Anima Christi', ['eucharystia', 'dziękczynienie']),
+        ('Laudate Dominum omnes gentes', ['uwielbienie', 'radość']),
+        ('Te Deum laudamus', ['dziękczynienie', 'radość']),
+        ('Adoro te devote', ['eucharystia', 'wiara']),
+    ],
+    'recessional': [
+        ('Salve Regina', ['maryja', 'najświętszej maryi']),
+        ('Regina caeli', ['wielkanoc', 'zmartwychwstanie']),
+        ('Alma Redemptoris Mater', ['adwent', 'narodzenie pańskie']),
+        ('Ave Regina caelorum', ['wielki post']),
+        ('Laudate Dominum omnes gentes', ['uwielbienie', 'radość']),
+        ('Te Deum laudamus', ['dziękczynienie']),
+    ],
+}
 
-    No external language model can add to this catalog. Always return five slots.
+
+def choose_songs(themes, date):
+    """Three catalogued Polish items and one Latin title for each Mass slot.
+
+    Does not invent catalogue numbers or claim liturgical approval.
     """
     cleaned = [str(t).lower().strip() for t in themes][:8]
     result = {}
+    seasonal = {'adwent', 'narodzenie pańskie', 'boże narodzenie',
+                'wielki post', 'wielkanoc', 'zmartwychwstanie',
+                'zesłanie ducha', 'duch święty'}
+    selected_seasons = set(cleaned) & seasonal
     for slot in ('entrance', 'offertory', 'communion', 'thanksgiving', 'recessional'):
         candidates = [s for s in SONGS if s[0] == slot]
-        # Tie-break rotation deterministic by date, but without obscuring theme.
         offset = date.toordinal() % len(candidates)
         rotated = candidates[offset:] + candidates[:offset]
-        # The first theme is antiphon priority, then the other motifs.
+
         def score(song):
             tags = song[3]
             value = sum((15 if i == 0 else 5) for i, theme in enumerate(cleaned)
                         if theme and theme in tags)
-            # More relevant than thematic lyrics mismatched with the season.
-            seasonal = {'adwent', 'narodzenie pańskie', 'boże narodzenie',
-                        'wielki post', 'wielkanoc', 'zmartwychwstanie',
-                        'zesłanie ducha', 'duch święty'}
-            selected_seasons = set(cleaned) & seasonal
             if any(t in seasonal and t not in selected_seasons for t in tags):
                 value -= 100
             return value
-        choice = max(rotated, key=score)
+
+        ranked = sorted(rotated, key=score, reverse=True)
+        polish = [{
+            'title': song[2], 'book': SONGBOOK, 'number': song[1],
+            'catalog_url': SOURCE, 'language': 'pl',
+        } for song in ranked[:3]]
+        assert len(polish) == 3
+        latin_options = LATIN_SONGS[slot]
+        loffset = date.toordinal() % len(latin_options)
+        latin_rotated = latin_options[loffset:] + latin_options[:loffset]
+        def latin_score(song):
+            return sum((15 if i == 0 else 5) for i, theme in enumerate(cleaned)
+                       if theme and theme in song[1])
+        latin = max(latin_rotated, key=latin_score)
         result[slot] = {
-            'title': choice[2], 'book': SONGBOOK, 'number': choice[1],
-            'catalog_url': SOURCE,
+            'polish': polish,
+            'latin': {
+                'title': latin[0], 'book': 'Tradycyjny śpiew łaciński',
+                'number': '', 'language': 'la',
+                'note': 'Dobór orientacyjny — sprawdź zgodność z formularzem i przepisami.',
+            },
+            # Older APKs still display one verified numbered Polish song.
+            'title': polish[0]['title'], 'book': polish[0]['book'],
+            'number': polish[0]['number'],
         }
     return result

@@ -19,6 +19,7 @@ from bs4 import BeautifulSoup
 from song_catalog import choose_songs
 from prefaces import choose_prefaces
 from chant_notation import make_chants
+from office_catalog import fetch_offices, office_color, index_url
 
 OUTDIR = Path(__file__).parent / 'site' / 'dni'
 SLOT_TITLES = {
@@ -62,8 +63,8 @@ DESCRIPTIONS = {
 THEMES_FOR_SONGS = {'radość': 'uwielbienie'}
 
 
-def source_url(day):
-    return f'https://brewiarz.pl/x_{day.year % 100:02d}/{day.day:02d}{day.month:02d}p/czyt.php3'
+def source_url(day, suffix="p"):
+    return f'https://brewiarz.pl/x_{day.year % 100:02d}/{day.day:02d}{day.month:02d}{suffix}/czyt.php3'
 
 
 def _indices(lines, title):
@@ -169,8 +170,8 @@ def parse_source_html(day, html):
             'sections': sections, 'ref': ref, 'theme': primary}
 
 
-def fetch_source(day):
-    url = source_url(day)
+def fetch_source(day, suffix="p"):
+    url = source_url(day, suffix)
     response = requests.get(url, timeout=35, headers={
         'User-Agent': 'TraditionesPersonalLiturgicalAid/1.0 (source references only)'})
     response.raise_for_status()
@@ -317,7 +318,7 @@ def _pastoral_texts(day, src):
             None, None)
 
 
-def compose(day, url, src):
+def compose(day, url, src, *, office=None):
     theme = src['theme']
     motif = DESCRIPTIONS[theme]
     refs = src['ref']
@@ -336,13 +337,20 @@ def compose(day, url, src):
     )
     themes = [THEMES_FOR_SONGS.get(theme, theme), 'eucharystia', 'dziękczynienie']
     prefaces, preface_note = choose_prefaces(day, celebration)
-    chants = make_chants(day, refs)
+    # Only the legacy default needs site PNG placeholders. Every other
+    # office renders its text/chant privately on-device from its own URL.
+    chants = make_chants(day, refs) if office is None or office.get('source_code') == 'p' else {}
+    color, color_note = office_color(celebration, day)
+    if office is not None:
+        color, color_note = office['color'], office['color_note']
     return {
-        'date': day.isoformat(), 'rite': 'Novus Ordo — kalendarz ogólnopolski',
+        'date': day.isoformat(), 'rite': 'Msza posoborowa — formularz wybrany w ILG',
         'source_url': url,
+        'reading_url': url,
         'generated_at_utc': dt.datetime.now(dt.timezone.utc).isoformat(timespec='seconds'),
         'celebration': celebration,
-        'liturgical_color': 'Sprawdź w źródle',
+        'liturgical_color': color,
+        'liturgical_color_note': color_note,
         'antiphon_summary': f'Antyfona na wejście zwraca uwagę na {motif}. Pełny tekst: pod podanym źródłem.',
         'introduction': intro, 'saint_name': saint, 'saint_description': saint_description,
         'introduction_note': editorial_note,
@@ -370,13 +378,45 @@ def produce(day, *, replace=False):
     if out.exists() and not replace:
         print(f'Pomijam gotowy dzień: {out.name}')
         return
-    url, src = fetch_source(day)
-    data = compose(day, url, src)
+    # Get the complete liturgical selector, not only the single default Mass.
+    offices = fetch_offices(day)
+    by_suffix = {}
+    for office in offices:
+        suffix = office['source_code']
+        if suffix in by_suffix:
+            # Same office with two jurisdictions; keep both choices.
+            office['data'] = by_suffix[suffix]
+            continue
+        try:
+            url, src = fetch_source(day, suffix)
+            if office['title'] == 'Obchód dnia':
+                office['title'] = src['celebration']
+                office['color'], office['color_note'] = office_color(src['celebration'], day)
+            content = compose(day, url, src, office=office)
+            by_suffix[suffix] = content
+            office['data'] = content
+        except Exception as exc:
+            print(f'UWAGA — nie można potwierdzić {day} {suffix}: {exc}', file=sys.stderr)
+            office['unavailable_reason'] = 'Nie udało się potwierdzić formularza z ILG. Otwórz czytania u źródła.'
+    default = next((o for o in offices if o['source_code'] == 'p' and 'data' in o), None)
+    if default is None:
+        default = next((o for o in offices if 'data' in o), None)
+    if default is None:
+        raise ValueError('Nie zweryfikowano żadnego formularza liturgicznego.')
+    # Old top-level fields remain for backward compatibility with old Android APKs.
+    data = dict(default['data'])
+    data.update({
+        'schema_version': 2,
+        'office_index_url': index_url(day),
+        'default_office_id': default['id'],
+        'offices': offices,
+    })
     OUTDIR.mkdir(parents=True, exist_ok=True)
     tmp = out.with_suffix('.json.tmp')
     tmp.write_text(json.dumps(data, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
     tmp.replace(out)
-    print(f'Wygenerowano: {out.name} — {data["celebration"]}')
+    print(f'Wygenerowano: {out.name} — {len(offices)} propozycji obchodów; '
+          f'{sum("data" in x for x in offices)} potwierdzonych')
 
 
 def main():
