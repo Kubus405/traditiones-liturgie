@@ -67,30 +67,56 @@ def source_url(day, suffix="p"):
     return f'https://brewiarz.pl/x_{day.year % 100:02d}/{day.day:02d}{day.month:02d}{suffix}/czyt.php3'
 
 
+# Some ILG formularies use "AKLAMACJA PRZED EWANGELIĄ" instead of
+# "ŚPIEW PRZED EWANGELIĄ". Long/short variants may also be marked in headings.
+# Work with REAL section headings; a missing optional acclamation must not
+# invalidate readings, psalm and Gospel for the whole day.
+HEADING_VARIANTS = {
+    'ANTYFONA NA WEJŚCIE': ('ANTYFONA NA WEJŚCIE',),
+    'PIERWSZE CZYTANIE': ('PIERWSZE CZYTANIE', 'I CZYTANIE'),
+    'DRUGIE CZYTANIE': ('DRUGIE CZYTANIE', 'II CZYTANIE'),
+    'PSALM RESPONSORYJNY': ('PSALM RESPONSORYJNY',),
+    'ŚPIEW PRZED EWANGELIĄ': ('ŚPIEW PRZED EWANGELIĄ', 'AKLAMACJA PRZED EWANGELIĄ'),
+    'EWANGELIA': ('EWANGELIA', 'EWANGELIA DŁUŻSZA', 'EWANGELIA KRÓTSZA'),
+}
+
+
+def _heading_match(line, heading):
+    t = re.sub(r'\s+', ' ', line).strip().upper()
+    variants = HEADING_VARIANTS.get(heading, (heading,))
+    return any(t == x or (t.startswith(x) and
+                       len(t) > len(x) and t[len(x)] in ' –—:-(')
+               for x in variants)
+
+
 def _indices(lines, title):
-    return [i for i, line in enumerate(lines) if line.upper() == title or line.upper().startswith(title + ' ')]
+    return [i for i, line in enumerate(lines) if _heading_match(line, title)]
 
 
 def _section(lines, title):
     indices = _indices(lines, title)
     if not indices:
         raise ValueError(f'Nie znaleziono sekcji: {title}')
+    # With ?off=1 we get real prose headings without duplicate expanded
+    # navigation blocks. Take the last matching one as a final safeguard.
     i = indices[-1]
     cutoff = len(lines)
-    for j in range(i + 1, min(i + 45, len(lines))):
-        t = lines[j].upper()
-        if t.startswith(('KOMENTARZ DO', 'WPROWADZENIE DO', 'KOLEKTA',
-                         'MODLITWA NAD DARAMI', 'ANTYFONA NA KOMUNIĘ',
-                         'REFLEKSJA NAD CZYTANIAMI')) or any(
-                         t == heading or t.startswith(heading + ' ')
-                         for heading in SLOT_TITLES.values()):
+    other_headings = tuple(SLOT_TITLES.values()) + (
+        'KOLEKTA', 'WPROWADZENIE DO LITURGII',
+        'KOMENTARZ DO', 'KOMENTARZ', 'MODLITWA NAD DARAMI',
+        'ANTYFONA NA KOMUNIĘ', 'PREFACJA', 'MODLITWA PO KOMUNII',
+        'UROCZYSTE BŁOGOSŁAWIEŃSTWO', 'GLORIA IN EXCELSIS DEO',
+        'CHWAŁA NA WYSOKOŚCI BOGU',
+    )
+    for j in range(i + 1, len(lines)):
+        if any(_heading_match(lines[j], h) for h in other_headings):
             cutoff = j
             break
     return ' '.join(lines[i:cutoff]).strip()
 
 
 def _ref(section, title):
-    content = section.removeprefix(title).strip()
+    content = section.strip()
     # A heading often includes its thematic subtitle, followed by the Bible citation.
     matches = re.findall(
         r'(?<!\w)(?:Por\.\s*)?(?:[1-3]\s*)?'
@@ -152,10 +178,13 @@ def parse_source_html(day, html):
                          f'wynik: {raw_celebration!r}')
     sections = {}
     for k, v in SLOT_TITLES.items():
-        if k == 'second_reading' and not _indices(lines, v):
+        if k in ('second_reading', 'acclamation') and not _indices(lines, v):
+            # Not every liturgical form uses a separate II reading or a
+            # separately labelled acclamation (e.g. some local formularies).
             continue
         sections[k] = _section(lines, v)
     ref = {k: _ref(val, SLOT_TITLES[k]) for k, val in sections.items()}
+    ref.setdefault('acclamation', '')
     # Do not publish guessed Bible citations: those sections must be on source page.
     if not ref['readings'] or not ref['psalm'] or not ref['gospel']:
         raise ValueError(f'Brak jednoznacznych siglów: {ref!r}')
@@ -171,12 +200,30 @@ def parse_source_html(day, html):
 
 
 def fetch_source(day, suffix="p"):
+    # The /czyt.php3?off=1 form has stable, unambiguous section headings.
+    # The regular view contains extensive menus, comments and other headings,
+    # which caused false "missing acclamation" errors on 28 October 2026.
     url = source_url(day, suffix)
-    response = requests.get(url, timeout=35, headers={
-        'User-Agent': 'TraditionesPersonalLiturgicalAid/1.0 (source references only)'})
+    simple_url = f'{url}?off=1'
+    response = requests.get(simple_url, timeout=35, headers={
+        'User-Agent': 'TraditionesPersonalLiturgicalAid/1.2 (source references only)',
+        'Accept': 'text/html',
+    })
     response.raise_for_status()
-    response.encoding = response.apparent_encoding or 'utf-8'
-    return url, parse_source_html(day, response.text)
+    # Do not accidentally accept a redirect to some OTHER day's liturgy.
+    from urllib.parse import urlparse
+    final = urlparse(response.url)
+    expected_path = urlparse(url).path
+    if (final.scheme != 'https' or final.hostname not in
+            ('brewiarz.pl', 'www.brewiarz.pl') or final.path != expected_path):
+        raise ValueError(f'Nieoczekiwane przekierowanie ILG: {response.url}')
+    # Never rely on requests.apparent_encoding for these legacy Polish pages:
+    # the source itself usually declares charset; then HTTP header; then UTF-8.
+    from bs4 import UnicodeDammit
+    raw = response.content
+    soup_guess = UnicodeDammit(raw, is_html=True)
+    content = soup_guess.unicode_markup or response.text
+    return simple_url, parse_source_html(day, content)
 
 
 
