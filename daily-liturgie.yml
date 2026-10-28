@@ -1,0 +1,68 @@
+name: Codzienne liturgie Traditiones — bez płatnego API
+
+on:
+  # GitHub Actions uses the Warsaw local clock, including summer/winter time.
+  # An additional morning/noon attempt makes outages less likely to leave a gap.
+  schedule:
+    - cron: '17 0,4,12 * * *'
+      timezone: 'Europe/Warsaw'
+  workflow_dispatch:
+  # Deploy automatically as soon as the generator or workflow is fixed.
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/daily-liturgie.yml'
+      - 'generate_daily.py'
+      - 'office_catalog.py'
+      - 'song_catalog.py'
+      - 'prefaces.py'
+      - 'chant_notation.py'
+      - 'test_local.py'
+      - 'test_upgrade.py'
+      - 'test_daily_paths.py'
+      - 'verify_publication.py'
+      - 'requirements.txt'
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: traditiones-liturgie-pages
+  cancel-in-progress: false
+
+jobs:
+  generate-and-publish:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Pobierz repozytorium
+        uses: actions/checkout@v4
+      - name: Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Zależności
+        run: pip install -r requirements.txt
+      - name: Testy bieżącego generatora
+        run: python test_local.py
+      - name: Test wyboru oficjum i unikalnych pieśni
+        run: python test_upgrade.py
+      - name: Test adresów ILG (zwykły dzień i święto)
+        run: python test_daily_paths.py
+      - name: Wygeneruj dziś i trzy kolejne dni (bez API)
+        run: python generate_daily.py --days 4 --replace
+      - name: Sprawdź plik dzisiejszej liturgii
+        run: python verify_publication.py
+      - name: Przygotuj GitHub Pages
+        uses: actions/configure-pages@v5
+      - name: Opublikuj treści
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: site
+      - name: Udostępnij stronę
+        id: deployment
+        uses: actions/deploy-pages@v4

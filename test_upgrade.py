@@ -39,7 +39,7 @@ assert items[-1]['scope'] == 'Poza Polską'
 assert len({x['id'] for x in items}) == len(items)
 
 # On ordinary days with no office picker, the default Mass remains available.
-assert parse_offices(DAY, '''<html><title>22 października 2026</title><p>Nie ma wyboru.</p></html>''')[0]['source_code'] == 'p'
+assert parse_offices(DAY, '''<html><title>22 października 2026</title><p>Nie ma wyboru.</p></html>''')[0]['source_code'] == ''
 assert office_color('Wspomnienie św. Jana Pawła II, papieża', DAY)[0] == 'biały'
 
 for i in range(15):

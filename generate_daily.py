@@ -339,7 +339,7 @@ def compose(day, url, src, *, office=None):
     prefaces, preface_note = choose_prefaces(day, celebration)
     # Only the legacy default needs site PNG placeholders. Every other
     # office renders its text/chant privately on-device from its own URL.
-    chants = make_chants(day, refs) if office is None or office.get('source_code') == 'p' else {}
+    chants = make_chants(day, refs) if office is None or office.get('source_code') in ('', 'p') else {}
     color, color_note = office_color(celebration, day)
     if office is not None:
         color, color_note = office['color'], office['color_note']
@@ -389,6 +389,13 @@ def produce(day, *, replace=False):
             continue
         try:
             url, src = fetch_source(day, suffix)
+            # A weekday can have an ordinary index with /ddmm/ rather than
+            # /ddmmp/. Log the source URL to make regressions debuggable.
+            print(f'Źródło {day.isoformat()} {suffix or "(bez sufiksu)"}: {url}')
+            if suffix == '' and office['title'] != 'Obchód dnia':
+                # Weekday source headings often contain only date and psalter week.
+                # Use the unambiguous weekday celebration from the index page.
+                src['celebration'] = office['title']
             if office['title'] == 'Obchód dnia':
                 office['title'] = src['celebration']
                 office['color'], office['color_note'] = office_color(src['celebration'], day)
@@ -398,7 +405,7 @@ def produce(day, *, replace=False):
         except Exception as exc:
             print(f'UWAGA — nie można potwierdzić {day} {suffix}: {exc}', file=sys.stderr)
             office['unavailable_reason'] = 'Nie udało się potwierdzić formularza z ILG. Otwórz czytania u źródła.'
-    default = next((o for o in offices if o['source_code'] == 'p' and 'data' in o), None)
+    default = next((o for o in offices if o['source_code'] in ('', 'p') and 'data' in o), None)
     if default is None:
         default = next((o for o in offices if 'data' in o), None)
     if default is None:
