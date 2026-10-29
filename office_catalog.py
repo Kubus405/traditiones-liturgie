@@ -23,7 +23,8 @@ def office_color(title: str, day: dt.date) -> tuple[str, str]:
     if 'zesłanie ducha świętego' in name or 'niedziela palmowa' in name:
         return 'czerwony', 'Orientacyjnie z rodzaju obchodu — potwierdź w Ordo.'
     if any(token in name for token in ('poświęcenia bazyliki', 'poświęcenia kościoła',
-                                       'jana pawła ii', 'papieża', 'najświętszej maryi')):
+                                       'jana pawła ii', 'papieża', 'najświętszej maryi',
+                                       'prezbitera', 'kapłana', 'wyznawcy')):
         return 'biały', 'Orientacyjnie z rodzaju obchodu — potwierdź w Ordo.'
     if any(token in name for token in ('zmartwychwstania', 'wielkanoc', 'boże narodzenie',
                                        'objawienie pańskie', 'wniebowstąpienie')):
@@ -74,6 +75,11 @@ def parse_offices(day: dt.date, html: str, *, base_url: str | None = None) -> li
             options.append((a, *parsed))
     for number, (anchor, suffix, url) in enumerate(options):
         name = re.sub(r'\s+', ' ', anchor.get_text(' ', strip=True)).strip()
+        # ILG places a navigation link such as '29.10.2026 - Wybór oficjum'
+        # before the actual celebrations. It is NOT a liturgical formulary.
+        # This link used to become a fake, unverified office in the app.
+        if re.search(r'wyb[oó]r\s+oficjum', name, re.I):
+            continue
         # Do not turn a date breadcrumb pointing to the same page into a
         # selectable office.
         if (len(name) < 5 or len(name) > 190 or

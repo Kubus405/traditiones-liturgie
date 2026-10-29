@@ -72,6 +72,13 @@ _add(70, ['I prefacja o świętych — Chwała świętych',
           'Prefacja o świętych dziewicach i zakonnikach'], category='saints')
 PREFACES[63] = {'number': 63, 'name': 'Prefacja o aniołach — Chwała Boża jaśnieje w aniołach', 'source_url': SOURCES['saints']}
 PREFACES[64] = {'number': 64, 'name': 'Prefacja o św. Janie Chrzcicielu — Posłannictwo Poprzednika Chrystusa', 'source_url': SOURCES['saints']}
+# Known and verified for the feast of Saints Simon and Jude.
+PREFACES[68] = {
+    'number': 68,
+    'name': 'II prefacja o Apostołach — Apostołowie fundamentem Kościoła i świadkami Boga',
+    'source_url': 'https://www.kerygma.pl/liturgiczne/uroczystosci-i-swieta/475-swieci-apostolowie-szymon-i-juda-tadeusz',
+}
+
 
 
 def _canon(s):
@@ -139,6 +146,10 @@ def choose_prefaces(day, celebration):
         'bozego ciala', 'przemienienia panskiego', 'wszystkich swietych',
         'krola wszechswiata', 'ofiarowania panskiego',
     ))
+    # Apostolic feasts use an attested specific preface in the Polish Missal.
+    if 'apostol' in name or 'apostoł' in name:
+        return _entries([68]), ('II prefacja o Apostołach (nr 68); '
+                'w przypadku szczególnego obchodu lokalnego sprawdź Mszał i Ordo.')
     if proper:
         return [], 'Uroczystość lub święto: sprawdź prefację własną w Mszale albo Ordo. Lista ogólna nie może jej zastąpić.'
     if period == 'advent':

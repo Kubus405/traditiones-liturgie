@@ -96,3 +96,27 @@ with tempfile.TemporaryDirectory() as temp:
         assert data['offices'][1]['data'] == data['offices'][2]['data']
         assert 'reading_text' not in str(data)
 print('OK: 8 opcji, 5 x (3 PL + 1 LA), bez powtarzania LA, kolory, źródła i JSON v2')
+
+
+# A date breadcrumb marked "Wybór oficjum" must never be a selectable Mass.
+for date, suffix, heading in (
+        (dt.date(2026, 10, 28), 'p', 'ŚWIĘTO ŚWIĘTYCH APOSTOŁÓW SZYMONA I JUDY TADEUSZA'),
+        (dt.date(2026, 10, 29), '', 'Czwartek XXX tygodnia Okresu Zwykłego')):
+    date_code = f'{date.day:02d}{date.month:02d}'
+    example_index = f'''<html><head><title>.:ILG:. - {date.day} października 2026</title></head>
+    <body><h2>Wybierz oficjum</h2>
+    <a href="/x_26/{date_code}/index.php3">{date.strftime('%d.%m.%Y')} - Wybór oficjum</a>
+    <p><a href="/x_26/{date_code}{suffix}/index.php3">{heading}</a></p>
+    </body></html>'''
+    found = parse_offices(date, example_index)
+    assert len(found) == 1, found
+    assert found[0]['title'] == heading
+    assert 'Wybór oficjum' not in str(found)
+assert office_color('Wspomnienie obowiązkowe bł. Michała Rua, prezbitera', dt.date(2026, 10, 29))[0] == 'biały'
+assert generator.choose_prefaces(dt.date(2026, 10, 28),
+    'ŚWIĘTO ŚWIĘTYCH APOSTOŁÓW SZYMONA I JUDY TADEUSZA')[0][0]['number'] == 68
+src_apostle = dict(src)
+src_apostle['celebration'] = 'ŚWIĘTO ŚWIĘTYCH APOSTOŁÓW SZYMONA I JUDY TADEUSZA'
+intro, intercessions, *_ = generator._pastoral_texts(dt.date(2026, 10, 28), src_apostle)
+assert 'Apostołów' in intro and 'Apostołów' in intercessions['introduction']
+print('OK: bez fikcyjnego oficjum 28/29.10, kolor prezbitera, prefacja 68, modlitwa apostolska')

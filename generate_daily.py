@@ -340,6 +340,33 @@ def _pastoral_texts(day, src):
                 'Indywidualnie opracowane wprowadzenie na podstawie czytań dnia.',
                 entry.get('saint_name'), entry.get('saint_description'))
 
+    # Liturgical feasts of Apostles deserve relevant prayers rather than the
+    # same generic weekday template. These are original study proposals.
+    celebration = src['celebration'].casefold()
+    if 'apostoł' in celebration and ('święto' in celebration or 'uroczystość' in celebration):
+        introduction = (
+            'Bracia i Siostry! W święto Apostołów gromadzimy się przy ołtarzu '
+            'Chrystusa, który wybrał i posłał swoich uczniów, aby głosili Ewangelię. '
+            'Dziękujmy Bogu za apostolski fundament Kościoła i prośmy, abyśmy '
+            'wiernie przekazywali otrzymaną wiarę.')
+        intercessions = {
+            'introduction': ('Bracia i Siostry, przez wstawiennictwo świętych '
+                             'Apostołów przedstawmy Bogu nasze prośby:'),
+            'petitions': [
+                'Módlmy się za Kościół, zbudowany na fundamencie Apostołów, aby wiernie głosił Ewangelię. Ciebie prosimy.',
+                'Módlmy się za papieża, biskupów i prezbiterów, aby odważnie przekazywali naukę Chrystusa. Ciebie prosimy.',
+                'Módlmy się za misjonarzy i wszystkich świadków wiary, aby prowadzili ludzi do Boga. Ciebie prosimy.',
+                'Módlmy się za cierpiących i wątpiących, aby odnaleźli nadzieję w Chrystusie. Ciebie prosimy.',
+                'Módlmy się za nas i za naszych zmarłych, abyśmy żyli Ewangelią, a oni zostali przyjęci do chwały nieba. Ciebie prosimy.',
+            ],
+            'conclusion': ('Boże, Ty przez Apostołów objawiłeś światu dobrą nowinę, '
+                           'wysłuchaj naszych modlitw i umacniaj nas w wierze. '
+                           'Przez Chrystusa, Pana naszego. Amen.'),
+        }
+        return (introduction, intercessions,
+                'Autorska propozycja na święto Apostołów; do akceptacji przez celebransa.',
+                None, None)
+
     # Zróżnicowanie formuł bez twierdzenia, że komentujemy konkretną Ewangelię.
     n = day.toordinal()
     introduction = ' '.join((
